@@ -1,68 +1,63 @@
-let email = localStorage.getItem("email");
-while (!email) {
-  email = prompt("Type your email address below...");
-  email && localStorage.setItem("email", email);
-}
-
-document.querySelector("#email-box").innerHTML = email;
-
-const socket = io();
+const getProducts = async () => {
+  const res = await fetch("/api/products");
+  const docs = await res.json();
+  return docs
+};
 
 const renderProducts = (data) => {
   const html = data
     .map(
       (element) => `<tr>
-                    <td>${element.id}</td>
-                    <td>${element.title}</td>
-                    <td>
-                        <img
-                            src="${element.thumbnail}"
-                            style="height: 9rem;"
-                        />
-                    </td>
-                    <td>$ ${element.price}</td>
-                 </tr>`,
+      <td>${element.id}</td>
+      <td>${element.title}</td>
+      <td>
+      <img
+      src="${element.thumbnail}"
+      style="height: 9rem;"
+      />
+      </td>
+      <td>$ ${element.price}</td>
+                 </tr>`
     )
     .join(" ");
   document.querySelector("#tbody").innerHTML = html;
 };
 
-const postProduct = () => {
-  const { value: title } = document.querySelector("input[name='title']");
-  const { value: thumbnail } = document.querySelector(
-    "input[name='thumbnail']",
-  );
-  const { value: price } = document.querySelector("input[name='price']");
-  socket.emit("post_product", { title, thumbnail, price });
-};
+(async () => {
+  const docs = await getProducts();
+  renderProducts(docs);
+})();
 
-socket.on("products_list", (data) => renderProducts(data));
-
-const productsFormRef = document.querySelector("#productsForm");
-productsFormRef.onsubmit = (event) => {
-  event.preventDefault();
-  postProduct();
-  productsFormRef.reset();
-};
+const socket = io();
 
 const renderMessages = (data) => {
+  // const { text, author } = data
   const html = data
     .map(
-      (element) => `
-            <p>
-                <span class="fw-bold">${element.email} </span>
-                <span class="text-danger">[${element.timestamp}]: </span>
-                <span>${element.message}</span>
-            </p>
-        `,
-    )
-    .join(" ");
+      (element) => {
+        const { text, author } = element
+        return `
+        <span>${text}</span>
+        `
+      }).join(" ")
+        
+        
+    //     return (`
+    //         <p>
+    //             <span class="fw-bold">${author.firstName} </span>
+                
+    //             <span>${text}</span>
+    //         </p>
+    //     `
+    // )
+    // // <span class="text-danger">[${element.timestamp}]: </span>
+    // .join(" "))};
   document.querySelector("#messages-box").innerHTML = html;
 };
 
 const postMessage = () => {
-  const { value: message } = document.querySelector("input[name='message']");
-  socket.emit("post_message", { email, message });
+  const { value: text } = document.querySelector("input[name='message']");
+  socket.emit("post_message", { text });
 };
 
 socket.on("messages_list", (data) => renderMessages(data));

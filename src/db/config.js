@@ -1,44 +1,15 @@
-const knex = require("knex")({
-  client: "mysql",
-  connection: {
-    host: "127.0.0.1",
-    port: 3306,
-    user: "root",
-    password: "",
-    database: "ecommercecoder",
-  },
-  pool: {
-    min: 0,
-    max: 8,
-  },
-});
+const mongoose = require("mongoose")
+require("dotenv").config()
 
-(async () => {
-  try {
-    await knex.schema.createTableIfNotExists("products", (table) => {
-      table.increments("id").primary();
-      table.string("title");
-      table.string("thumbnail");
-      table.integer("price");
-    });
-    console.log("Table #Products created!");
-  } catch (err) {
-    console.log(err);
-  }
-})();
+console.log(process.env.MONGO_DB_URL)
+mongoose.connect(process.env.MONGO_DB_URL);
 
-(async () => {
-  try {
-    await knex.schema.createTableIfNotExists("messages", (table) => {
-      table.increments("id").primary();
-      table.timestamp("timestamp").defaultTo(knex.fn.now());
-      table.string("email");
-      table.string("message");
-    });
-    console.log("Table #Messages created!");
-  } catch (err) {
-    console.log(err);
-  }
-})();
+mongoose.connection.on("open", () =>
+  console.log("Succesfully connected to database"),
+);
 
-module.exports = knex;
+mongoose.connection.on("error", (err) =>
+  console.log("Error on database connection", err),
+);
+
+module.exports = mongoose;
