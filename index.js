@@ -1,11 +1,23 @@
-const http = require("http");
-const express = require("express");
-const { Server } = require("socket.io");
-const router = require("./src/routes/index");
 const { engine } = require("express-handlebars");
 const socketHandler = require("./src/socket");
+const router = require("./src/routes/index");
+const MongoStore = require("connect-mongo");
+const session = require("express-session");
+const { Server } = require("socket.io");
+const express = require("express");
+const http = require("http");
+require("dotenv").config();
 
 const app = express();
+
+app.use(
+  session({
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_DB_URL }),
+    secret: "secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use("/", router);
 app.use(express.static("./public"));
@@ -22,36 +34,11 @@ app.engine(
   engine({
     extname: ".hbs",
     layoutsDir: "./public/views/layouts",
-    defaultLayout: "index",
     partialsDir: "./public/views/partials",
+    defaultLayout: "index",
   })
 );
 
 const io = new Server(server);
 
 io.on("connection", socketHandler);
-
-// io.on("connection", async (socket) => {
-
-//   // Get all messages.
-//   try {
-//     console.log("new user")
-//     // const data = await knex.from("messages").select("*");
-//     // socket.emit("messages_list", data);
-//   } catch (err) {
-//     console.log(err);
-//   }
-
-//   // Post new message.
-//   socket.on("post_message", async (data) => {
-//     try {
-//         console.log(data)
-//     //   await knex("messages").insert(data);
-//     //   const res = await knex.from("messages").select("*");
-//     //   socket.emit("messages_list", res);
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   });
-
-// });
